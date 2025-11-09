@@ -65,7 +65,7 @@ export default function Products() {
         price: product.price,
         sku: product.sku,
         stock: product.stock.toString(),
-        category: product.category.toString(),
+        category: product.category?.id ? product.category.id.toString() : (product.category_id?.toString() || ""),
         is_active: product.is_active,
         images: [],
       });
@@ -99,7 +99,7 @@ export default function Products() {
       return;
     }
 
-    if (!productData.category) {
+    if (!productData.category || productData.category === "") {
       toast({
         title: "Validation Error",
         description: "Please select a category",
@@ -108,7 +108,7 @@ export default function Products() {
       return;
     }
 
-    if (!productData.price) {
+    if (!productData.price || productData.price === "") {
       toast({
         title: "Validation Error",
         description: "Price is required",
@@ -162,11 +162,18 @@ export default function Products() {
         return;
       }
 
-      const payload = {
-        ...productData,
-        price,
+      // backend expects a category_id field for the relation - send that instead
+      // construct payload explicitly and include both category and category_id to satisfy
+      // backend expectations. Cast to any when sending to the API to avoid strict TS mismatch.
+      const payload: any = {
+        name: productData.name,
+        description: productData.description,
+        sku: productData.sku,
+        is_active: productData.is_active,
+        price: price.toFixed(2),
         stock,
-        category,
+        category: category,
+        category_id: category,
       };
 
       let product;
