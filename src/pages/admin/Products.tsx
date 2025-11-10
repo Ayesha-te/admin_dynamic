@@ -47,6 +47,7 @@ export default function Products() {
     name: "",
     description: "",
     price: "",
+    delivery_charges: "",
     sku: "",
     stock: "0",
     category: "",
@@ -63,9 +64,10 @@ export default function Products() {
         name: product.name,
         description: product.description,
         price: product.price,
+        delivery_charges: product.delivery_charges || "",
         sku: product.sku,
         stock: product.stock.toString(),
-        category: product.category.toString(),
+        category: product.category?.id ? product.category.id.toString() : (product.category_id?.toString() || ""),
         is_active: product.is_active,
         images: [],
       });
@@ -75,6 +77,7 @@ export default function Products() {
         name: "",
         description: "",
         price: "",
+        delivery_charges: "",
         sku: "",
         stock: "0",
         category: "",
@@ -99,7 +102,7 @@ export default function Products() {
       return;
     }
 
-    if (!productData.category) {
+    if (!productData.category || productData.category === "") {
       toast({
         title: "Validation Error",
         description: "Please select a category",
@@ -108,7 +111,7 @@ export default function Products() {
       return;
     }
 
-    if (!productData.price) {
+    if (!productData.price || productData.price === "") {
       toast({
         title: "Validation Error",
         description: "Price is required",
@@ -162,11 +165,27 @@ export default function Products() {
         return;
       }
 
-      const payload = {
-        ...productData,
-        price,
+      // backend expects a category_id field for the relation - send that instead
+      // construct payload explicitly and include both category and category_id to satisfy
+      // backend expectations. Cast to any when sending to the API to avoid strict TS mismatch.
+<<<<<<< HEAD
+      const deliveryCharges = productData.delivery_charges ? parseFloat(productData.delivery_charges) : 0;
+
+=======
+>>>>>>> a63b1098797073ef46d42b081b18cf66e94c8717
+      const payload: any = {
+        name: productData.name,
+        description: productData.description,
+        sku: productData.sku,
+        is_active: productData.is_active,
+        price: price.toFixed(2),
+<<<<<<< HEAD
+        delivery_charges: deliveryCharges.toFixed(2),
+=======
+>>>>>>> a63b1098797073ef46d42b081b18cf66e94c8717
         stock,
-        category,
+        category: category,
+        category_id: category,
       };
 
       let product;
@@ -399,7 +418,7 @@ export default function Products() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="price">Price (AED)</Label>
                   <Input
@@ -410,6 +429,19 @@ export default function Products() {
                     value={formData.price}
                     onChange={(e) =>
                       setFormData({ ...formData, price: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="delivery_charges">Delivery Charges (AED)</Label>
+                  <Input
+                    id="delivery_charges"
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    value={formData.delivery_charges}
+                    onChange={(e) =>
+                      setFormData({ ...formData, delivery_charges: e.target.value })
                     }
                   />
                 </div>
