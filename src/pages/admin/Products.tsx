@@ -165,24 +165,9 @@ export default function Products() {
         return;
       }
 
-      // backend expects a category_id field for the relation - send that instead
-      // construct payload explicitly and include both category and category_id to satisfy
-      // backend expectations. Cast to any when sending to the API to avoid strict TS mismatch.
-<<<<<<< HEAD
-      const deliveryCharges = productData.delivery_charges ? parseFloat(productData.delivery_charges) : 0;
-
-=======
->>>>>>> a63b1098797073ef46d42b081b18cf66e94c8717
-      const payload: any = {
-        name: productData.name,
-        description: productData.description,
-        sku: productData.sku,
-        is_active: productData.is_active,
-        price: price.toFixed(2),
-<<<<<<< HEAD
-        delivery_charges: deliveryCharges.toFixed(2),
-=======
->>>>>>> a63b1098797073ef46d42b081b18cf66e94c8717
+      const payload = {
+        ...productData,
+        price,
         stock,
         category: category,
         category_id: category,
