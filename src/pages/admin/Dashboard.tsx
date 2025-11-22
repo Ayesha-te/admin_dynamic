@@ -14,19 +14,52 @@ export default function Dashboard() {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const [products, categories, fetchedOrders] = await Promise.all([
-          apiClient.getProducts(),
-          apiClient.getCategories(),
-          apiClient.getOrders(),
-        ]);
+        // Try lightweight fast stats endpoint first for instant UI
+        const stats = await apiClient.getAdminStats();
 
-        setProductCount(products.length);
-        setCategoryCount(categories.length);
-        setOrderCount(fetchedOrders.length);
-        setOrders(fetchedOrders.slice(0, 4));
-        setLowStockProducts(products.filter((p) => p.stock < 10).slice(0, 4));
+        setProductCount(stats.product_count ?? 0);
+        setCategoryCount(stats.category_count ?? 0);
+        setOrderCount(stats.order_count ?? 0);
+        setOrders((stats.recent_orders || []).slice(0, 4));
+        setLowStockProducts((stats.low_stock || []).slice(0, 4));
+
+        // Kick off background full-list loads to warm caches (don't block UI)
+        (async () => {
+          try {
+            const [products, categories, fetchedOrders] = await Promise.all([
+              apiClient.getProducts(),
+              apiClient.getCategories(),
+              apiClient.getOrders(),
+            ]);
+
+            setProductCount(products.length);
+            setCategoryCount(categories.length);
+            setOrderCount(fetchedOrders.length);
+            setOrders(fetchedOrders.slice(0, 4));
+            setLowStockProducts(products.filter((p) => p.stock < 10).slice(0, 4));
+          } catch (e) {
+            // Background fetch failed; ignore (stats already shown)
+            console.debug('Background dashboard warm-up failed', e);
+          }
+        })();
       } catch (error) {
-        console.error("Failed to load dashboard data", error);
+        // If stats endpoint isn't available, fall back to original heavier parallel load
+        console.warn('getAdminStats failed, falling back to full loads', error);
+        try {
+          const [products, categories, fetchedOrders] = await Promise.all([
+            apiClient.getProducts(),
+            apiClient.getCategories(),
+            apiClient.getOrders(),
+          ]);
+
+          setProductCount(products.length);
+          setCategoryCount(categories.length);
+          setOrderCount(fetchedOrders.length);
+          setOrders(fetchedOrders.slice(0, 4));
+          setLowStockProducts(products.filter((p) => p.stock < 10).slice(0, 4));
+        } catch (e) {
+          console.error("Failed to load dashboard data", e);
+        }
       } finally {
         setIsLoading(false);
       }

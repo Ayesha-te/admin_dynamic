@@ -13,6 +13,7 @@ import Categories from "./pages/admin/Categories";
 import Products from "./pages/admin/Products";
 import Orders from "./pages/admin/Orders";
 import Blogs from "./pages/admin/Blogs";
+import Subscribers from "./pages/admin/Subscribers";
 import { AuthProvider } from "./contexts/auth-context";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="products" element={<Products />} />
               <Route path="orders" element={<Orders />} />
               <Route path="blogs" element={<Blogs />} />
+              <Route path="subscribers" element={<Subscribers />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

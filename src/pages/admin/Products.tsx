@@ -53,6 +53,9 @@ export default function Products() {
     category: "",
     is_active: true,
     images: [] as Array<{ file: File; color: string; altText: string }>,
+    // optional discount price (string, e.g., "99.99")
+    discount_price: "",
+    original_price: "",
   });
   const [pendingImagePreview, setPendingImagePreview] = useState<string>("");
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
@@ -70,6 +73,8 @@ export default function Products() {
         category: product.category?.id ? product.category.id.toString() : (product.category_id?.toString() || ""),
         is_active: product.is_active,
         images: [],
+        discount_price: product.discount_price || (product.discount ? product.discount.discount_price : "") || "",
+        original_price: (product.discount && product.discount.original_price) ? product.discount.original_price : product.price,
       });
     } else {
       setEditingProduct(null);
@@ -83,6 +88,8 @@ export default function Products() {
         category: "",
         is_active: true,
         images: [],
+        discount_price: "",
+        original_price: "",
       });
     }
     setPendingImagePreview("");
@@ -171,6 +178,9 @@ export default function Products() {
         stock,
         category: category,
         category_id: category,
+        // include discount fields only when provided
+        ...(productData.discount_price && productData.discount_price !== "" ? { discount_price: parseFloat(productData.discount_price) } : {}),
+        ...(productData.original_price && productData.original_price !== "" ? { original_price: parseFloat(productData.original_price) } : {}),
       };
 
       let product;
@@ -403,20 +413,46 @@ export default function Products() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="price">Price (AED)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="0.00"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price">Price (AED)</Label>
+                  <Label htmlFor="discount_price">Discount Price (optional)</Label>
                   <Input
-                    id="price"
+                    id="discount_price"
                     type="number"
                     placeholder="0.00"
                     step="0.01"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
+                    value={formData.discount_price}
+                    onChange={(e) => setFormData({ ...formData, discount_price: e.target.value })}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="original_price">Original Price (optional)</Label>
+                  <Input
+                    id="original_price"
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    value={formData.original_price}
+                    onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="delivery_charges">Delivery Charges (AED)</Label>
                   <Input
@@ -571,7 +607,17 @@ export default function Products() {
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.category?.name || "-"}</TableCell>
-                    <TableCell>AED {parseFloat(product.price).toFixed(2)}</TableCell>
+                    
+                    <TableCell>
+                      {product.discount_price || product.discount ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm text-muted-foreground line-through">AED {parseFloat(product.price).toFixed(2)}</span>
+                          <span className="font-medium">AED {(product.discount_price || product.discount?.discount_price) ? parseFloat(product.discount_price || product.discount?.discount_price).toFixed(2) : parseFloat(product.price).toFixed(2)}</span>
+                        </div>
+                      ) : (
+                        `AED ${parseFloat(product.price).toFixed(2)}`
+                      )}
+                    </TableCell>
                     <TableCell>{product.stock}</TableCell>
                     <TableCell>
                       <Badge variant={product.is_active ? "default" : "secondary"}>

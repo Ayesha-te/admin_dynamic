@@ -6,7 +6,8 @@ import {
   ShoppingCart,
   Menu,
   LogOut,
-  BookOpen
+  BookOpen,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -23,6 +24,7 @@ export const AdminLayout = () => {
     { name: "Categories", href: "/admin/categories", icon: Tag },
     { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { name: "Blogs", href: "/admin/blogs", icon: BookOpen },
+    { name: "Subscribers", href: "/admin/subscribers", icon: Mail },
   ];
 
   const handleLogout = () => {

@@ -45,6 +45,14 @@ interface Category {
   slug: string;
   description: string;
   is_active: boolean;
+  parent_category_id?: number | null;
+  subcategories?: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    is_active: boolean;
+  }>;
 }
 
 interface Product {
@@ -59,6 +67,14 @@ interface Product {
   is_active: boolean;
   category: number;
   images: Array<{ id: number; image: string; color: string; alt_text: string; ordering: number }>;
+  // Optional discount data returned by the API
+  discount?: {
+    id: number;
+    original_price: string;
+    discount_price: string;
+    is_active: boolean;
+  } | null;
+  discount_price?: string | null;
 }
 
 interface Blog {
@@ -74,6 +90,14 @@ interface Blog {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface AdminStats {
+  product_count: number;
+  category_count: number;
+  order_count: number;
+  recent_orders: Order[];
+  low_stock: Product[];
 }
 
 class ApiClient {
@@ -190,6 +214,11 @@ class ApiClient {
   // Products API (Admin)
   async getProducts(): Promise<Product[]> {
     return this.request<Product[]>('/catalog/admin/products/');
+  }
+
+  // Lightweight admin dashboard stats (fast endpoint)
+  async getAdminStats(): Promise<AdminStats> {
+    return this.request<AdminStats>('/admin/stats/');
   }
 
   async getProduct(id: number): Promise<Product> {

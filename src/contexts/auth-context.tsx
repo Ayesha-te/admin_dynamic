@@ -18,16 +18,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (token) {
+      // If we have a cached user snapshot, use it immediately for fast UI
+      try {
+        const cached = localStorage.getItem('admin_user');
+        if (cached) {
+          setUser(JSON.parse(cached));
+          // do not keep loading state; allow UI to render quickly
+          setIsLoading(false);
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+
+      // Refresh authoritative user data in background
       apiClient
         .getCurrentUser()
         .then((userData) => {
           setUser(userData);
+          try {
+            localStorage.setItem('admin_user', JSON.stringify(userData));
+          } catch (e) {}
         })
         .catch(() => {
+          // If refresh fails, clear tokens and cached user
           localStorage.removeItem('admin_token');
           localStorage.removeItem('admin_refresh_token');
+          localStorage.removeItem('admin_user');
+          setUser(null);
         })
         .finally(() => {
+          // ensure loading is false in case there was no cached user
           setIsLoading(false);
         });
     } else {
@@ -43,6 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('admin_refresh_token', response.refresh);
       const userData = await apiClient.getCurrentUser();
       setUser(userData);
+      try {
+        localStorage.setItem('admin_user', JSON.stringify(userData));
+      } catch (e) {}
     } catch (error) {
       throw error;
     } finally {
@@ -53,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_refresh_token');
+    localStorage.removeItem('admin_user');
     setUser(null);
   };
 
